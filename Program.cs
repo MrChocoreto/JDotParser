@@ -5,6 +5,9 @@ namespace JDot_Parser
     {
         static void Main(string[] args)
         {
+
+            #region Data_Test
+                
             DCFP _DCFP = new();
             DataBase data = new();
             Anime anime = new();
@@ -20,6 +23,9 @@ namespace JDot_Parser
 
             data = _DCFP.ToDataClass<DataBase>(@"D:\Hola.txt", true);
             string hola = "";
+
+            #endregion
+            
         }
     }
 }
