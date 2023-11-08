@@ -82,13 +82,6 @@ namespace JDot_Parser.Systems
             }
         }
 
-
-        public Type GetGenericTypeType<GenClass>()
-        {
-            return typeof(GenClass);
-        }
-
-
         #endregion
 
 
@@ -252,12 +245,24 @@ namespace JDot_Parser.Systems
         #region Text_To_Class
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="GenClass"></typeparam>
+        /// <returns></returns>
+        Type GetGenericTypeType<GenClass>()
+        {
+            return typeof(GenClass);
+        }
+
+
         //CSTC = Convet String To Class
         static object ToClass(string stgData, object objClass, bool IsPath)
         {
             object obj_Result = default;
 
-            if (stgData != null && !objClass.GetType().IsPrimitive && objClass.GetType().IsClass)
+            if ((stgData == null || stgData == "") && objClass.GetType().IsPrimitive 
+                && !objClass.GetType().IsClass)
             {
                 // Se pasa a convertir la data en el objeto
                 // que se espera
@@ -271,17 +276,7 @@ namespace JDot_Parser.Systems
                 // pueda convertir
                 return obj_Result;
             }
-
-            
         }
-
-
-
-
-
-
-
-
 
         #endregion
 
