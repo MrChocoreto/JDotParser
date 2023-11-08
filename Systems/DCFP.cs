@@ -17,14 +17,29 @@ namespace JDot_Parser.Systems
         {typeof(int), "int"},
         {typeof(double), "double"},
         {typeof(float), "float"},
-        {typeof(long), "long"},
-        {typeof(short), "short"},
-        {typeof(decimal), "decimal"},
+        //{typeof(long), "long"},
+        //{typeof(short), "short"},
+        //{typeof(decimal), "decimal"},
         {typeof(byte), "byte"},
         {typeof(string), "string"},
         {typeof(char), "char"},
         {typeof(bool), "bool"},
     };
+
+        readonly Dictionary<string, Type> GenericFlags = new()
+    {
+        {"int",typeof(int)},
+        {"double", typeof(double) },
+        {"float", typeof(float) },
+        //{"long", typeof(long) },
+        //{"short", typeof(short) },
+        //{"decimal", typeof(decimal) },
+        {"byte", typeof(byte) },
+        {"string", typeof(string) },
+        {"char", typeof(char) },
+        {"bool", typeof(bool) },
+    };
+
 
         #endregion
 
@@ -60,7 +75,7 @@ namespace JDot_Parser.Systems
         public GenClass ToDataClass<GenClass>(string stgData, bool IsPath = false)
         {
             
-            Type genClassType = GetGenericTypeType<GenClass>();
+            Type genClassType = GetTypeOfGeneric<GenClass>();
 
             // Verificar si el tipo GenClass es un tipo válido
             // (por ejemplo, una clase con un constructor sin parámetros).
@@ -246,11 +261,11 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// 
+        /// Get the Type of the Generic type set
         /// </summary>
-        /// <typeparam name="GenClass"></typeparam>
-        /// <returns></returns>
-        Type GetGenericTypeType<GenClass>()
+        /// <typeparam name="GenClass">Is the Generic type</typeparam>
+        /// <returns>The type that correspond with the Generic type</returns>
+        Type GetTypeOfGeneric<GenClass>()
         {
             return typeof(GenClass);
         }
