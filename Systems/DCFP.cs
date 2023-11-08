@@ -59,22 +59,26 @@ namespace JDot_Parser.Systems
         /// <returns>String converted into the Class that you need</returns>
         public GenClass ToDataClass<GenClass>(string stgData, bool IsPath = false)
         {
+            
             Type genClassType = GetGenericTypeType<GenClass>();
 
-            // Verificar si el tipo GenClass es un tipo válido (por ejemplo, una clase con un constructor sin parámetros).
-            if (genClassType.IsClass && !genClassType.IsAbstract && genClassType.GetConstructor(Type.EmptyTypes) != null)
+            // Verificar si el tipo GenClass es un tipo válido
+            // (por ejemplo, una clase con un constructor sin parámetros).
+            if (!genClassType.IsClass && genClassType.IsAbstract && 
+                genClassType.GetConstructor(Type.EmptyTypes) == null)
+            {
+                // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
+                throw new InvalidOperationException("GenClass no es un tipo válido para crear una instancia");
+            }
+            else
             {
                 // Crea una instancia del tipo GenClass usando la reflexión.
                 GenClass instance = (GenClass)Activator.CreateInstance(genClassType);
 
-                // Aquí puedes realizar las operaciones necesarias para inicializar "instance" con los datos de "stgData".
-                instance = (GenClass)ToClass(stgData,instance,IsPath);
+                // Aquí puedes realizar las operaciones necesarias para inicializar
+                // "instance" con los datos de "stgData".
+                instance = (GenClass)ToClass(stgData, instance, IsPath);
                 return instance;
-            }
-            else
-            {
-                // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
-                throw new InvalidOperationException("GenClass no es un tipo válido para crear una instancia");
             }
         }
 
@@ -84,20 +88,6 @@ namespace JDot_Parser.Systems
             return typeof(GenClass);
         }
 
-
-
-        ///// <summary>
-        ///// Convert a String into Class
-        ///// </summary>
-        ///// <param name="stgData">String that contain the Data</param>
-        ///// <param name="objClass">Type of the object that will be convert</param>
-        ///// <param name="IsPath">Determine if the "StringData" is a Path or the Data in a string</param>
-        ///// <returns>String converted into the Class that you need</returns>
-        ///// By default is "false"</param>
-        //object ToDataClass(string stgData, object objClass, bool IsPath = false)
-        //{
-        //    return ToClass(stgData, objClass, IsPath);
-        //}
 
         #endregion
 
