@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Reflection;
 
 namespace JDot_Parser.Systems
@@ -57,7 +58,7 @@ namespace JDot_Parser.Systems
         /// <returns>The Class converted to String</returns>
         public string ToDataFile(object obt_Cls)
         {
-            return Stg_CCTS(obt_Cls);
+            return CCTS(obt_Cls);
         }
 
         #endregion
@@ -74,13 +75,13 @@ namespace JDot_Parser.Systems
         /// <returns>String converted into the Class that you need</returns>
         public GenClass ToDataClass<GenClass>(string stgData, bool IsPath = false)
         {
-            
-            Type genClassType = GetTypeOfGeneric<GenClass>();
+            //GenClass = Generic Class
+            Type GenClassType = GetTypeOfGeneric<GenClass>();
 
             // Verificar si el tipo GenClass es un tipo válido
             // (por ejemplo, una clase con un constructor sin parámetros).
-            if (!genClassType.IsClass && genClassType.IsAbstract && 
-                genClassType.GetConstructor(Type.EmptyTypes) == null)
+            if (!GenClassType.IsClass && GenClassType.IsAbstract && 
+                GenClassType.GetConstructor(Type.EmptyTypes) == null)
             {
                 // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
                 throw new InvalidOperationException("GenClass no es un tipo válido para crear una instancia");
@@ -88,7 +89,7 @@ namespace JDot_Parser.Systems
             else
             {
                 // Crea una instancia del tipo GenClass usando la reflexión.
-                GenClass instance = (GenClass)Activator.CreateInstance(genClassType);
+                GenClass instance = (GenClass)Activator.CreateInstance(GenClassType);
 
                 // Aquí puedes realizar las operaciones necesarias para inicializar
                 // "instance" con los datos de "stgData".
@@ -111,18 +112,18 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// stg_CCTS = Convert obt_Cls To String
+        /// Convert Class To String
         /// </summary>
         /// <param name="obt_Cls"> </param>
         /// <returns>Result of convert your class to Text</returns>
-        string Stg_CCTS(object obt_Cls)
+        string CCTS(object obt_Cls)
         {
             string stg_Result;
             if (obt_Cls != null && !(obt_Cls.GetType().Name == "String") && !obt_Cls.GetType().IsPrimitive)
             {
                 stg_Result = stg_IMF;
                 stg_Result += $"<{obt_Cls.GetType().Name}>";
-                stg_Result += Stg_EIFC(obt_Cls, obt_Cls.GetType());
+                stg_Result += EIFC(obt_Cls, obt_Cls.GetType());
                 stg_Result += $"\n</{obt_Cls.GetType().Name}>";
             }
             else
@@ -137,7 +138,7 @@ namespace JDot_Parser.Systems
         /// <param name="cls">Class/List</param>
         /// <param name="type">Type of the Object</param>
         /// <returns>Content of the Class</returns>
-        string Stg_EIFC(object cls, Type type)
+        string EIFC(object cls, Type type)
         {
             string stg_Result = default;
             string stg_Item_Type;
@@ -148,8 +149,13 @@ namespace JDot_Parser.Systems
             foreach (FieldInfo item in lst_Fields)
             {
                 object obt_field = item.GetValue(cls);
+
+                // Agrega un nuevo dato primitivo
+                if (!IsGenericList(item) && item.Name != "Empty")
+                    stg_Result += $"\n\t<<{item.Name}: {item.GetValue(cls)}>>";
+
                 // comprueba si lo que se le esta pasando es una lista generica
-                if (Bol_IGL(item))
+                else if(!IsGenericList(item))
                 {
                     // stg_Result += $"\n\t<{item.Name}>";
                     // en caso de ser cierto lo que hace es crear una lista generica
@@ -168,13 +174,19 @@ namespace JDot_Parser.Systems
                         foreach (object obtElement in lst_ElementsList)
                         {
                             stg_Item_Type = $"{obtElement}";
-                            stg_Item = Stg_OTE(obtElement.GetType());
+                            stg_Item = OTE(obtElement.GetType());
 
                             if (obtElement == lst_ElementsList.First())
                             {
                                 //Agrega la Flag con el nombre de la Lista,
                                 //y el tipo de dato que usa entre parentesis
+                                //por ejemplo: \n\t<List_Words>(string)
                                 stg_Result += $"\n\t<{item.Name}>({stg_Item})";
+
+
+                                //Agrega cada elemento que contiene la
+                                //lista compleja adentro de su etiqueta,
+                                //por ejemplo: \n\t![Word]
                                 if (stg_Item_Type == stg_Item)
                                     stg_Result += $"\n\t!<[{stg_Item}]>\n";
                             }
@@ -182,36 +194,42 @@ namespace JDot_Parser.Systems
                             if (stg_Item_Type != stg_Item)
                             {
                                 //Agrega cada elemento que contiene la lista
+                                //dentro de su etiqueta, por ejemplo:
+                                // \n\t\t![Hello_World]
                                 stg_Result += $"\n\t\t![{obtElement}]";
                             }
 
+
                             //Hace un uso recursivo para poder extraer la data
                             //de todos los elementos
-                            stg_Result += Stg_EIFC(obtElement, obtElement.GetType());
+                            stg_Result += EIFC(obtElement, obtElement.GetType());
                             if (obtElement == lst_ElementsList.Last())
                             {
-                                //Si el tipo del item es igual al item, escribe esto
-                                //ejemplo Anime==Anime
+                                //Si el tipo del item es igual al item(Number==Number),
+                                //escribe esto por ejemplo: \n\t</Anime>\n\n
                                 if (stg_Item_Type == stg_Item)
                                 {
-
                                     stg_Result += $"\n\t</{item.Name}>\n\n";
                                 }
 
-                                //Si no escribira esto
-                                //ejemplo None==string
+                                //Si no escribira esto por ejemplo: \n\t</List_Words>
                                 else
                                 {
                                     stg_Result += $"\n\t</{item.Name}>";
                                 }
+
+
+                                //la diferencia entre el primer caso y el ultimo
+                                //consiste en que el primer caso permite la
+                                //separacion entre objetos pertenecientes a una
+                                //"Lista Compleja" por eso el doble salto de linea
+                                //en el primer caso
                             }
                         }
                     }
-
                 }
-                // Agrega un nuevo dato primitivo
-                else if (!Bol_IGL(item) && item.Name != "Empty")
-                    stg_Result += $"\n\t<<{item.Name}: {item.GetValue(cls)}>>";
+                
+                 
             }
             return stg_Result;
         }
@@ -219,11 +237,11 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// IGL = Is a Generic List
+        /// Is a Generic List
         /// </summary>
         /// <param name="fieldInfo">List</param>
         /// <returns>True or False if the field is generic or not</returns>
-        static bool Bol_IGL(FieldInfo fieldInfo)
+        static bool IsGenericList(FieldInfo fieldInfo)
         {
             Type fieldType = fieldInfo.FieldType;
 
@@ -234,11 +252,11 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// OTE = Obtain Type by Element
+        /// Obtain Type by Element
         /// </summary>
         /// <param name="type">Type of the Object</param>
         /// <returns>A string with the "Type" of the object </returns>
-        string Stg_OTE(Type type)
+        string OTE(Type type)
         {
             string stgResult;
             if (DataTypes.TryGetValue(type, out string value))
@@ -261,7 +279,7 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// Get the Type of the Generic type set
+        /// Get type of the "Generic Type" set
         /// </summary>
         /// <typeparam name="GenClass">Is the Generic type</typeparam>
         /// <returns>The type that correspond with the Generic type</returns>
@@ -271,7 +289,13 @@ namespace JDot_Parser.Systems
         }
 
 
-        //CSTC = Convet String To Class
+        /// <summary>
+        /// Convet String To Class
+        /// </summary>
+        /// <param name="stgData"></param>
+        /// <param name="objClass"></param>
+        /// <param name="IsPath"></param>
+        /// <returns></returns>
         static object ToClass(string stgData, object objClass, bool IsPath)
         {
             object obj_Result = default;
@@ -281,7 +305,6 @@ namespace JDot_Parser.Systems
             {
                 // Se pasa a convertir la data en el objeto
                 // que se espera
-                // obj_Result = 
                 return objClass;
             }
             else
@@ -289,9 +312,77 @@ namespace JDot_Parser.Systems
                 // Regresa un objeto vacio del tipo que se
                 // le esta pasando en caso de que no se
                 // pueda convertir
+
+                obj_Result = IsPath ? GetClassByPath(objClass, stgData) : 
+                                     GetClassByString(objClass, stgData);
                 return obj_Result;
             }
         }
+
+
+        /// <summary>
+        /// Get Class By Path
+        /// </summary>
+        /// <param name="Class"></param>
+        /// <param name="DataPath"></param>
+        /// <returns></returns>
+        static object GetClassByPath(object Class, string DataPath)
+        {
+            string[] DataLines = GetDataByPath(DataPath);
+            if (DataLines == null)
+                return Class;
+            else
+            {
+
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// Get Class By String
+        /// </summary>
+        /// <param name="Class"></param>
+        /// <param name="Data"></param>
+        /// <returns></returns>
+        static object GetClassByString(object Class, string Data)
+        {
+            string[] DataLines;
+            DataLines = Data.Split(@"\n");
+
+            //Debug Color
+            Console.ForegroundColor = ConsoleColor.Green;
+            foreach (string line in DataLines)
+            {
+                //TODO
+                Console.WriteLine(line);
+            }
+            return null;
+        }
+
+
+
+        /// <summary>
+        /// Get Data By Path
+        /// </summary>
+        /// <param name="DataPath"></param>
+        /// <returns></returns>
+        static string[] GetDataByPath(string DataPath)
+        {
+            string[] FullData;
+            string Lines;
+            StreamReader Reader = new(DataPath);
+
+            if (!File.Exists(DataPath))
+                return null;
+            else
+            {
+                Lines = Reader.ReadToEnd();
+                Reader.Close();
+                return FullData = Lines.Split("\n");
+            }
+        }
+
 
         #endregion
 
