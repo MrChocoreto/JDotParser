@@ -11,7 +11,7 @@ namespace JDot_Parser.Systems
 
         const string stg_IMF = "<mdf>\n"; // IMF = Input MainSaver Flag
                                           // mdf = MainSaver Data Flag
-        const string stg_OMF = "\n</mdf>\n"; // OMF = Output MainSaver Flag
+        const string stg_OMF = "\n</mdf>"; // OMF = Output MainSaver Flag
 
         readonly Dictionary<Type, string> DataTypes = new()
     {
@@ -92,7 +92,7 @@ namespace JDot_Parser.Systems
                 GenClass instance = (GenClass)Activator.CreateInstance(GenClassType);
 
                 // Aquí puedes realizar las operaciones necesarias para inicializar
-                // "instance" con los datos de "stgData".
+                // "instance" con los datos de "Data".
                 instance = (GenClass)ToClass(stgData, instance, IsPath);
                 return instance;
             }
@@ -114,17 +114,17 @@ namespace JDot_Parser.Systems
         /// <summary>
         /// Convert Class To String
         /// </summary>
-        /// <param name="obt_Cls"> </param>
+        /// <param name="cls"> </param>
         /// <returns>Result of convert your class to Text</returns>
-        string CCTS(object obt_Cls)
+        string CCTS(object cls)
         {
             string stg_Result;
-            if (obt_Cls != null && !(obt_Cls.GetType().Name == "String") && !obt_Cls.GetType().IsPrimitive)
+            if (cls != null && !(cls.GetType().Name == "String") && !cls.GetType().IsPrimitive)
             {
                 stg_Result = stg_IMF;
-                stg_Result += $"<{obt_Cls.GetType().Name}>";
-                stg_Result += EIFC(obt_Cls, obt_Cls.GetType());
-                stg_Result += $"\n</{obt_Cls.GetType().Name}>";
+                stg_Result += $"<{cls.GetType().Name}>";
+                stg_Result += EIFC(cls, cls.GetType());
+                stg_Result += $"\n</{cls.GetType().Name}>";
             }
             else
                 stg_Result = stg_IMF;
@@ -150,12 +150,14 @@ namespace JDot_Parser.Systems
             {
                 object obt_field = item.GetValue(cls);
 
-                // Agrega un nuevo dato primitivo
+                // Agrega un nuevo elemento junto con su valor
+                // mientras sea un dato primitivo,
+                // por ejemplo: \n\t<<Creador: John Carmack>>
                 if (!IsGenericList(item) && item.Name != "Empty")
                     stg_Result += $"\n\t<<{item.Name}: {item.GetValue(cls)}>>";
 
                 // comprueba si lo que se le esta pasando es una lista generica
-                else if(!IsGenericList(item))
+                else if(IsGenericList(item))
                 {
                     // stg_Result += $"\n\t<{item.Name}>";
                     // en caso de ser cierto lo que hace es crear una lista generica
@@ -235,7 +237,6 @@ namespace JDot_Parser.Systems
         }
 
 
-
         /// <summary>
         /// Is a Generic List
         /// </summary>
@@ -248,7 +249,6 @@ namespace JDot_Parser.Systems
             return fieldType.IsGenericType &&
             fieldType.GetGenericTypeDefinition() == typeof(List<>);
         }
-
 
 
         /// <summary>
@@ -292,30 +292,27 @@ namespace JDot_Parser.Systems
         /// <summary>
         /// Convet String To Class
         /// </summary>
-        /// <param name="stgData"></param>
-        /// <param name="objClass"></param>
+        /// <param name="Data"></param>
+        /// <param name="cls">Class</param>
         /// <param name="IsPath"></param>
         /// <returns></returns>
-        static object ToClass(string stgData, object objClass, bool IsPath)
+        object ToClass(string Data, object cls, bool IsPath)
         {
             object obj_Result = default;
-
-            if ((stgData == null || stgData == "") && objClass.GetType().IsPrimitive 
-                && !objClass.GetType().IsClass)
+            if ((Data == null || Data == "") && cls.GetType().IsPrimitive 
+                && !cls.GetType().IsClass)
             {
-                // Se pasa a convertir la data en el objeto
-                // que se espera
-                return objClass;
+                //Regresa un objeto vacio del tipo que se
+                //le esta pasando en caso de que no cumpla
+                //con las condiciones
+                return cls;
             }
             else
             {
-                // Regresa un objeto vacio del tipo que se
-                // le esta pasando en caso de que no se
-                // pueda convertir
-
-                obj_Result = IsPath ? GetClassByPath(objClass, stgData) : 
-                                     GetClassByString(objClass, stgData);
-                return obj_Result;
+                //Se pasa a convertir la data en el objeto
+                //que se espera
+                return obj_Result = IsPath ? GetClassByPath(cls, Data) :
+                                     GetClassByString(cls, Data);
             }
         }
 
@@ -326,7 +323,7 @@ namespace JDot_Parser.Systems
         /// <param name="Class"></param>
         /// <param name="DataPath"></param>
         /// <returns></returns>
-        static object GetClassByPath(object Class, string DataPath)
+        object GetClassByPath(object Class, string DataPath)
         {
             string[] DataLines = GetDataByPath(DataPath);
             if (DataLines == null)
@@ -345,7 +342,7 @@ namespace JDot_Parser.Systems
         /// <param name="Class"></param>
         /// <param name="Data"></param>
         /// <returns></returns>
-        static object GetClassByString(object Class, string Data)
+        object GetClassByString(object Class, string Data)
         {
             string[] DataLines;
             DataLines = Data.Split(@"\n");
@@ -367,7 +364,7 @@ namespace JDot_Parser.Systems
         /// </summary>
         /// <param name="DataPath"></param>
         /// <returns></returns>
-        static string[] GetDataByPath(string DataPath)
+        string[] GetDataByPath(string DataPath)
         {
             string[] FullData;
             string Lines;

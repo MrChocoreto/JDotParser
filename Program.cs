@@ -17,12 +17,12 @@ namespace JDot_Parser
             anime.Tags.Add("Action");
             data.AnimeList.Add(anime);
 
-            StreamWriter streamWriter = new(@"D:\Hola.txt");
+            StreamWriter streamWriter = new(@"D:\Emu.txt");
             streamWriter.Write(_DCFP.ToDataFile(data));
             streamWriter.Close();
             Console.WriteLine(_DCFP.ToDataFile(data));
 
-            NewData = _DCFP.ToDataClass<DataBase>(@"D:\Hola.txt", true);
+            NewData = _DCFP.ToDataClass<DataBase>(@"D:\Emu.txt", true);
 
             Console.ReadKey();
             #endregion
