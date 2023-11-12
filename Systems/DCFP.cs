@@ -1,13 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace JDot_Parser.Systems
 {
     public class DCFP
     {
 
-        #region Variables
+        #region Global_Variables
 
         const string stg_IMF = "<mdf>\n"; // IMF = Input MainSaver Flag
                                           // mdf = MainSaver Data Flag
@@ -54,11 +52,11 @@ namespace JDot_Parser.Systems
         /// <summary>
         /// Convert a Class into String Format like a XML 
         /// </summary>
-        /// <param name="obt_Cls">The Class that you want convert</param>
+        /// <param name="Class">The Class that you want convert</param>
         /// <returns>The Class converted to String</returns>
-        public string ToDataFile(object obt_Cls)
+        public string ToDataFile(object Class)
         {
-            return CCTS(obt_Cls);
+            return ClassToString(Class);
         }
 
         #endregion
@@ -70,10 +68,10 @@ namespace JDot_Parser.Systems
         /// <summary>
         /// Convert a String into Class
         /// </summary>
-        /// <param name="stgData">String that contain the Data</param>
+        /// <param name="Data">String that contain the Data</param>
         /// <param name="IsPath">Determine if the "StringData" is a Path or the Data in a string</param>
         /// <returns>String converted into the Class that you need</returns>
-        public GenClass ToDataClass<GenClass>(string stgData, bool IsPath = false)
+        public GenClass ToDataClass<GenClass>(string Data, bool IsPath = false)
         {
             //GenClass = Generic Class
             Type GenClassType = GetTypeOfGeneric<GenClass>();
@@ -84,7 +82,7 @@ namespace JDot_Parser.Systems
                 GenClassType.GetConstructor(Type.EmptyTypes) == null)
             {
                 // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
-                throw new InvalidOperationException("GenClass no es un tipo válido para crear una instancia");
+                throw new InvalidOperationException("The class is not of a valid type to create an instance");
             }
             else
             {
@@ -93,7 +91,7 @@ namespace JDot_Parser.Systems
 
                 // Aquí puedes realizar las operaciones necesarias para inicializar
                 // "instance" con los datos de "Data".
-                instance = (GenClass)ToClass(stgData, instance, IsPath);
+                instance = (GenClass)ToClass(Data, instance, IsPath);
                 return instance;
             }
         }
@@ -112,120 +110,125 @@ namespace JDot_Parser.Systems
 
 
         /// <summary>
-        /// Convert Class To String
+        /// Class To String
         /// </summary>
-        /// <param name="cls"> </param>
+        /// <param name="Class"> </param>
         /// <returns>Result of convert your class to Text</returns>
-        string CCTS(object cls)
+        string ClassToString(object Class)
         {
-            string stg_Result;
-            if (cls != null && !(cls.GetType().Name == "String") && !cls.GetType().IsPrimitive)
+            string stg_Result = stg_IMF;
+            if (Class != null && !Class.GetType().IsPrimitive)
             {
-                stg_Result = stg_IMF;
-                stg_Result += $"<{cls.GetType().Name}>";
-                stg_Result += EIFC(cls, cls.GetType());
-                stg_Result += $"\n</{cls.GetType().Name}>";
+                stg_Result += $"<{Class.GetType().Name}>";
+                stg_Result += ItemsFromClass(Class, Class.GetType());
+                stg_Result += $"\n</{Class.GetType().Name}>";
             }
-            else
-                stg_Result = stg_IMF;
             return stg_Result + stg_OMF;
         }
 
 
         /// <summary>
-        /// Extract Items From Class/List
+        /// Extract Items From a Class/List
         /// </summary>
-        /// <param name="cls">Class/List</param>
+        /// <param name="Class">Class/List</param>
         /// <param name="type">Type of the Object</param>
         /// <returns>Content of the Class</returns>
-        string EIFC(object cls, Type type)
+        string ItemsFromClass(object Class, Type type)
         {
-            string stg_Result = default;
-            string stg_Item_Type;
-            string stg_Item;
+            string Result = default;
+            string ItemType;
+            string Item;
             // recupero todos los elementos ya sea de una clase o de una lista
-            // en un Array de Fields Info para poder trabajar cada uno individualmente
-            FieldInfo[] lst_Fields = type.GetFields();
-            foreach (FieldInfo item in lst_Fields)
+            // en un Array de FieldsInfo para poder trabajar cada uno individualmente
+            FieldInfo[] Fields = type.GetFields();
+            foreach (FieldInfo item in Fields)
             {
-                object obt_field = item.GetValue(cls);
+                object field = item.GetValue(Class);
 
                 // Agrega un nuevo elemento junto con su valor
                 // mientras sea un dato primitivo,
                 // por ejemplo: \n\t<<Creador: John Carmack>>
                 if (!IsGenericList(item) && item.Name != "Empty")
-                    stg_Result += $"\n\t<<{item.Name}: {item.GetValue(cls)}>>";
+                    Result += $"\n\t<<{item.Name}: {item.GetValue(Class)}>>";
 
-                // comprueba si lo que se le esta pasando es una lista generica
+                // comprueba si lo que se le esta pasando es una lista
+                // de tipo generico
                 else if(IsGenericList(item))
                 {
-                    // stg_Result += $"\n\t<{item.Name}>";
-                    // en caso de ser cierto lo que hace es crear una lista generica
-                    IList<object> lst_ElementsList = new List<object>();
+                    // Result += $"\n\t<{item.Name}>";
+                    // en caso de ser cierto lo que hace es crear una
+                    // lista generica de objetos
+                    IList<object> GenObjectList = new List<object>();
                     // se compreba si el valor de la lista de elementos es un
-                    // IEnumerable de objetos ademas de que los convierte IEnumerable
-                    if (obt_field is IEnumerable<object> enumerable)
+                    // IEnumerable de objetos ademas de que los crea un objeto
+                    // IEnumerable que contiene los elementos de la lista
+                    if (field is IEnumerable<object> IEListObjects)
                     {
-                        // de ser cierto crea una lista con los elementos en base
+                        // y de ser cierto crea una lista con los elementos en base
                         // a los IEnumerables
-                        lst_ElementsList = enumerable.ToList();
+                        GenObjectList = IEListObjects.ToList();
 
                         // se recorre cada elemento de la lista para ver si contiene mas
                         // elementos del mismo tipo dentro o son puros atributos/elementos
                         // de una lista
-                        foreach (object obtElement in lst_ElementsList)
+                        foreach (object ObjectList in GenObjectList)
                         {
-                            stg_Item_Type = $"{obtElement}";
-                            stg_Item = OTE(obtElement.GetType());
+                            ItemType = $"{ObjectList}";
+                            Item = GetTypeByElement(ObjectList.GetType());
 
-                            if (obtElement == lst_ElementsList.First())
+                            if (ObjectList == GenObjectList.First())
                             {
                                 //Agrega la Flag con el nombre de la Lista,
                                 //y el tipo de dato que usa entre parentesis
                                 //por ejemplo: \n\t<List_Words>(string)
-                                stg_Result += $"\n\t<{item.Name}>({stg_Item})";
+                                Result += $"\n\t<{item.Name}>({Item})";
 
 
                                 //Agrega cada elemento que contiene la
-                                //lista compleja adentro de su etiqueta,
-                                //por ejemplo: \n\t![Word]
-                                if (stg_Item_Type == stg_Item)
-                                    stg_Result += $"\n\t!<[{stg_Item}]>\n";
+                                //lista compleja de primer nivel adentro
+                                //de su etiqueta.
+                                //Por ejemplo: \n\t![Word]
+                                if (ItemType == Item)
+                                    Result += $"\n\t!<[{Item}]>\n";
                             }
 
-                            if (stg_Item_Type != stg_Item)
+                            if (ItemType != Item)
                             {
-                                //Agrega cada elemento que contiene la lista
-                                //dentro de su etiqueta, por ejemplo:
-                                // \n\t\t![Hello_World]
-                                stg_Result += $"\n\t\t![{obtElement}]";
+                                //Agrega cada elemento que contiene la
+                                //lista compleja de segundo nivel
+                                //dentro de su etiqueta.
+                                //Por ejemplo: \n\t\t![Hello_World]
+                                Result += $"\n\t\t![{ObjectList}]";
                             }
 
 
                             //Hace un uso recursivo para poder extraer la data
-                            //de todos los elementos
-                            stg_Result += EIFC(obtElement, obtElement.GetType());
-                            if (obtElement == lst_ElementsList.Last())
+                            //de todos los elementos que se encuentren a un
+                            //nivel inferior dentro del objeto evaluado
+                            Result += ItemsFromClass(ObjectList, ObjectList.GetType());
+                            if (ObjectList == GenObjectList.Last())
                             {
                                 //Si el tipo del item es igual al item(Number==Number),
                                 //escribe esto por ejemplo: \n\t</Anime>\n\n
-                                if (stg_Item_Type == stg_Item)
+                                if (ItemType == Item)
                                 {
-                                    stg_Result += $"\n\t</{item.Name}>\n\n";
+                                    Result += $"\n\t</{item.Name}>\n\n";
                                 }
 
                                 //Si no escribira esto por ejemplo: \n\t</List_Words>
                                 else
                                 {
-                                    stg_Result += $"\n\t</{item.Name}>";
+                                    Result += $"\n\t</{item.Name}>";
                                 }
 
 
                                 //la diferencia entre el primer caso y el ultimo
                                 //consiste en que el primer caso permite la
                                 //separacion entre objetos pertenecientes a una
-                                //"Lista Compleja" por eso el doble salto de linea
-                                //en el primer caso
+                                //"Lista Compleja" a diferencia del segundo caso
+                                //por eso el doble salto de linea en el primer caso,
+                                //esto se hace para el cierre de Flags del objeto
+                                //correspondiente
                             }
                         }
                     }
@@ -233,7 +236,7 @@ namespace JDot_Parser.Systems
                 
                  
             }
-            return stg_Result;
+            return Result;
         }
 
 
@@ -244,30 +247,22 @@ namespace JDot_Parser.Systems
         /// <returns>True or False if the field is generic or not</returns>
         static bool IsGenericList(FieldInfo fieldInfo)
         {
-            Type fieldType = fieldInfo.FieldType;
-
-            return fieldType.IsGenericType &&
-            fieldType.GetGenericTypeDefinition() == typeof(List<>);
+            return fieldInfo.FieldType.IsGenericType &&
+            fieldInfo.FieldType.GetGenericTypeDefinition() == typeof(List<>);
         }
 
 
         /// <summary>
-        /// Obtain Type by Element
+        /// Get Type By Element
         /// </summary>
         /// <param name="type">Type of the Object</param>
         /// <returns>A string with the "Type" of the object </returns>
-        string OTE(Type type)
+        string GetTypeByElement(Type type)
         {
-            string stgResult;
             if (DataTypes.TryGetValue(type, out string value))
-                stgResult = value;
+                return value;
             else
-                stgResult = type.Name;
-            //else if (Nullable.GetUnderlyingType(type) != null)
-            //{
-            //    stgResult = "null";
-            //}
-            return stgResult;
+                return type.Name;
         }
 
 
@@ -330,7 +325,7 @@ namespace JDot_Parser.Systems
                 return Class;
             else
             {
-
+                //TODO
                 return null;
             }
         }
@@ -358,7 +353,6 @@ namespace JDot_Parser.Systems
         }
 
 
-
         /// <summary>
         /// Get Data By Path
         /// </summary>
@@ -366,17 +360,15 @@ namespace JDot_Parser.Systems
         /// <returns></returns>
         string[] GetDataByPath(string DataPath)
         {
-            string[] FullData;
-            string Lines;
-            StreamReader Reader = new(DataPath);
-
+            string DataLines;
             if (!File.Exists(DataPath))
                 return null;
             else
             {
-                Lines = Reader.ReadToEnd();
+                StreamReader Reader = new(DataPath);
+                DataLines = Reader.ReadToEnd();
                 Reader.Close();
-                return FullData = Lines.Split("\n");
+                return DataLines.Split("\n");
             }
         }
 
