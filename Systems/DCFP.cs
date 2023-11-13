@@ -12,32 +12,26 @@ namespace JDot_Parser.Systems
         const string stg_OMF = "\n</mdf>"; // OMF = Output MainSaver Flag
 
         readonly Dictionary<Type, string> DataTypes = new()
-    {
-        {typeof(int), "int"},
-        {typeof(double), "double"},
-        {typeof(float), "float"},
-        //{typeof(long), "long"},
-        //{typeof(short), "short"},
-        //{typeof(decimal), "decimal"},
-        {typeof(byte), "byte"},
-        {typeof(string), "string"},
-        {typeof(char), "char"},
-        {typeof(bool), "bool"},
-    };
+        {
+            {typeof(int), "int"},
+            {typeof(double), "double"},
+            {typeof(float), "float"},
+            {typeof(byte), "byte"},
+            {typeof(string), "string"},
+            {typeof(char), "char"},
+            {typeof(bool), "bool"},
+        };
 
         readonly Dictionary<string, Type> GenericFlags = new()
-    {
-        {"int",typeof(int)},
-        {"double", typeof(double) },
-        {"float", typeof(float) },
-        //{"long", typeof(long) },
-        //{"short", typeof(short) },
-        //{"decimal", typeof(decimal) },
-        {"byte", typeof(byte) },
-        {"string", typeof(string) },
-        {"char", typeof(char) },
-        {"bool", typeof(bool) },
-    };
+        {
+            {"int",typeof(int)},
+            {"double", typeof(double) },
+            {"float", typeof(float) },
+            {"byte", typeof(byte) },
+            {"string", typeof(string) },
+            {"char", typeof(char) },
+            {"bool", typeof(bool) },
+        };
 
 
         #endregion
@@ -141,21 +135,25 @@ namespace JDot_Parser.Systems
             // recupero todos los elementos ya sea de una clase o de una lista
             // en un Array de FieldsInfo para poder trabajar cada uno individualmente
             FieldInfo[] Fields = type.GetFields();
-            foreach (FieldInfo item in Fields)
+            foreach (FieldInfo ItemField in Fields)
             {
-                object field = item.GetValue(Class);
+                object field = ItemField.GetValue(Class);
 
                 // Agrega un nuevo elemento junto con su valor
                 // mientras sea un dato primitivo,
                 // por ejemplo: \n\t<<Creador: John Carmack>>
-                if (!IsGenericList(item) && item.Name != "Empty")
-                    Result += $"\n\t<<{item.Name}: {item.GetValue(Class)}>>";
+                if (!IsGenericList(ItemField) && ItemField.Name != "Empty")
+                    //Revisa si es el ultimo elemento de la lista
+                    if (ItemField == Fields[Fields.Length-1])
+                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>\n";
+                    else
+                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>";
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
-                else if(IsGenericList(item))
+                else if(IsGenericList(ItemField))
                 {
-                    // Result += $"\n\t<{item.Name}>";
+                    // Result += $"\n\t<{ItemField.Name}>";
                     // en caso de ser cierto lo que hace es crear una
                     // lista generica de objetos
                     IList<object> GenObjectList = new List<object>();
@@ -175,30 +173,36 @@ namespace JDot_Parser.Systems
                         {
                             ItemType = $"{ObjectList}";
                             Item = GetTypeByElement(ObjectList.GetType());
-
-                            if (ObjectList == GenObjectList.First())
+                            
+                            if (ObjectList != GenObjectList.First())
+                            {
+                                if (ItemType == Item)
+                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
+                            }
+                            else
                             {
                                 //Agrega la Flag con el nombre de la Lista,
                                 //y el tipo de dato que usa entre parentesis
-                                //por ejemplo: \n\t<List_Words>(string)
-                                Result += $"\n\t<{item.Name}>({Item})";
+                                //por ejemplo: \n<List_Words>(string)
+                                Result += $"\n<{ItemField.Name}>({Item})";
 
 
                                 //Agrega cada elemento que contiene la
                                 //lista compleja de primer nivel adentro
                                 //de su etiqueta.
-                                //Por ejemplo: \n\t![Word]
+                                //Por ejemplo: \n![Word]
                                 if (ItemType == Item)
-                                    Result += $"\n\t!<[{Item}]>\n";
+                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
                             }
+                                
 
                             if (ItemType != Item)
                             {
                                 //Agrega cada elemento que contiene la
                                 //lista compleja de segundo nivel
                                 //dentro de su etiqueta.
-                                //Por ejemplo: \n\t\t![Hello_World]
-                                Result += $"\n\t\t![{ObjectList}]";
+                                //Por ejemplo: \n![Hello_World]
+                                Result += $"\n![{ObjectList}]";
                             }
 
 
@@ -208,17 +212,23 @@ namespace JDot_Parser.Systems
                             Result += ItemsFromClass(ObjectList, ObjectList.GetType());
                             if (ObjectList == GenObjectList.Last())
                             {
-                                //Si el tipo del item es igual al item(Number==Number),
-                                //escribe esto por ejemplo: \n\t</Anime>\n\n
+                                //Si el tipo del ItemField es igual al ItemField(Number==Number),
+                                //escribe esto por ejemplo: \n</Anime>\n\n
                                 if (ItemType == Item)
                                 {
-                                    Result += $"\n\t</{item.Name}>\n\n";
+                                    //Evalua si lo que tiene por detras es un
+                                    //salto de linea y de serlo imprime lo primero
+                                    //de lo contrario imprime lo segundo
+                                    if (Result[Result.Length-1].ToString() == "\n")
+                                        Result += $"</{ItemField.Name}>\n\n";
+                                    else
+                                        Result += $"\n</{ItemField.Name}>\n\n";
                                 }
 
-                                //Si no escribira esto por ejemplo: \n\t</List_Words>
+                                //Si no escribira esto por ejemplo: \n</List_Words>\n\n
                                 else
                                 {
-                                    Result += $"\n\t</{item.Name}>";
+                                    Result += $"\n</{ItemField.Name}>";
                                 }
 
 
@@ -233,8 +243,6 @@ namespace JDot_Parser.Systems
                         }
                     }
                 }
-                
-                 
             }
             return Result;
         }

@@ -11,11 +11,24 @@ namespace JDot_Parser
             DCFP _DCFP = new();
             DataBase data = new();
             DataBase NewData = new();
+
             Anime anime = new();
             anime.Name = "High School DXD";
             anime.Tags.Add("Romance");
             anime.Tags.Add("Action");
+
+            Anime anime2 = new();
+            anime2.Name = "Nazo no Kanojo X";
+            anime2.Tags.Add("School");
+            anime2.Tags.Add("Ecchi");
+
+            Manga manga = new();
+            manga.Name = "Berserk";
+
+
             data.AnimeList.Add(anime);
+            data.AnimeList.Add(anime2);
+            data.MangaList.Add(manga);
 
             StreamWriter streamWriter = new(@"D:\Emu.txt");
             streamWriter.Write(_DCFP.ToDataFile(data));
