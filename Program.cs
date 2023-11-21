@@ -8,8 +8,9 @@ namespace JDot_Parser
 
             #region Data_Test
 
-            DCFP _DCFP = new();
+            JDot Parser = new();
             DataBase data = new();
+            DataBase data1 = new();
             DataBase NewData = new();
 
             Anime anime = new();
@@ -21,28 +22,29 @@ namespace JDot_Parser
             anime2.Name = "Nazo no Kanojo X";
             anime2.Tags.Add("School");
             anime2.Tags.Add("Ecchi");
+            data1.AnimeList.Add(anime2);
+            anime.data_anime = data1;
 
-            Manga manga = new();
-            manga.Name = "Berserk";
+            //Manga manga = new();
+            //manga.Name = "Berserk";
 
 
             data.AnimeList.Add(anime);
-            data.AnimeList.Add(anime2);
-            data.MangaList.Add(manga);
+            //data.MangaList.Add(manga);
 
             StreamWriter streamWriter = new(@"D:\Emu.txt");
-            streamWriter.Write(_DCFP.ToDataFile(data));
+            streamWriter.Write(Parser.ToDataFile(data));
             streamWriter.Close();
-            Console.WriteLine(_DCFP.ToDataFile(data));
+            Console.WriteLine(Parser.ToDataFile(data));
 
-            NewData = _DCFP.ToDataClass<DataBase>(@"D:\Emu.txt", true);
+            NewData = Parser.ToDataClass<DataBase>(@"D:\Emu.txt", true);
 
             Console.ReadKey();
             #endregion
 
 
 
-            #region Other_Test
+            #region Other_Tests
 
             //string All = @"hola\nmundo\nyo soy\nWilley Wonka";
             //Console.WriteLine(All);

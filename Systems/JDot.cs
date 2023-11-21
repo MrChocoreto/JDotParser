@@ -2,7 +2,7 @@
 
 namespace JDot_Parser.Systems
 {
-    public class DCFP
+    public class JDot
     {
 
         #region Global_Variables
@@ -50,7 +50,7 @@ namespace JDot_Parser.Systems
         /// <returns>The Class converted to String</returns>
         public string ToDataFile(object Class)
         {
-            return ClassToString(Class);
+            return stg_IMF + ClassToString(Class) + stg_OMF;
         }
 
         #endregion
@@ -110,14 +110,14 @@ namespace JDot_Parser.Systems
         /// <returns>Result of convert your class to Text</returns>
         string ClassToString(object Class)
         {
-            string stg_Result = stg_IMF;
+            string stg_Result = default;
             if (Class != null && !Class.GetType().IsPrimitive)
             {
                 stg_Result += $"<{Class.GetType().Name}>";
                 stg_Result += ItemsFromClass(Class, Class.GetType());
                 stg_Result += $"\n</{Class.GetType().Name}>";
             }
-            return stg_Result + stg_OMF;
+            return stg_Result;
         }
 
 
@@ -144,14 +144,17 @@ namespace JDot_Parser.Systems
                 // por ejemplo: \n\t<<Creador: John Carmack>>
                 if (!IsGenericList(ItemField) && ItemField.Name != "Empty")
                     //Revisa si es el ultimo elemento de la lista
-                    if (ItemField == Fields[Fields.Length-1])
-                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>\n";
+                    if (ItemField == Fields[Fields.Length - 1])
+                        if (DataTypes.TryGetValue(type, out string value))
+                            Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>\n";
+                        else
+                            Result += $"\n\n{ClassToString(field)}\n";
                     else
                         Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>";
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
-                else if(IsGenericList(ItemField))
+                if(IsGenericList(ItemField))
                 {
                     // Result += $"\n\t<{ItemField.Name}>";
                     // en caso de ser cierto lo que hace es crear una
@@ -332,10 +335,7 @@ namespace JDot_Parser.Systems
             if (DataLines == null)
                 return Class;
             else
-            {
-                //TODO
-                return null;
-            }
+                return MergeDataToClass(Class, DataLines);
         }
 
 
@@ -347,17 +347,8 @@ namespace JDot_Parser.Systems
         /// <returns></returns>
         object GetClassByString(object Class, string Data)
         {
-            string[] DataLines;
-            DataLines = Data.Split(@"\n");
-
-            //Debug Color
-            Console.ForegroundColor = ConsoleColor.Green;
-            foreach (string line in DataLines)
-            {
-                //TODO
-                Console.WriteLine(line);
-            }
-            return null;
+            string[] DataLines = Data.Split(@"\n");
+            return MergeDataToClass(Class,DataLines);
         }
 
 
@@ -378,6 +369,133 @@ namespace JDot_Parser.Systems
                 Reader.Close();
                 return DataLines.Split("\n");
             }
+        }
+
+
+        /// <summary>
+        /// Merge the data to a class
+        /// </summary>
+        /// <param name="Class"></param>
+        /// <param name="DataLines"></param>
+        /// <returns></returns>
+        object MergeDataToClass(object Class, string[] DataLines)
+        {
+            string Result = default;
+            string ItemType;
+            string Item;
+            // recupero todos los elementos ya sea de una clase o de una lista
+            // en un Array de FieldsInfo para poder trabajar cada uno individualmente
+            FieldInfo[] Fields = Class.GetType().GetFields();
+            foreach (FieldInfo ItemField in Fields)
+            {
+                object field = ItemField.GetValue(Class);
+
+                // Agrega un nuevo elemento junto con su valor
+                // mientras sea un dato primitivo,
+                // por ejemplo: \n\t<<Creador: John Carmack>>
+                if (!IsGenericList(ItemField) && ItemField.Name != "Empty")
+                    //Revisa si es el ultimo elemento de la lista
+                    if (ItemField == Fields[Fields.Length - 1])
+                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>\n";
+                    else
+                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>";
+
+                // comprueba si lo que se le esta pasando es una lista
+                // de tipo generico
+                else if (IsGenericList(ItemField))
+                {
+                    // Result += $"\n\t<{ItemField.Name}>";
+                    // en caso de ser cierto lo que hace es crear una
+                    // lista generica de objetos
+                    IList<object> GenObjectList = new List<object>();
+                    // se compreba si el valor de la lista de elementos es un
+                    // IEnumerable de objetos ademas de que los crea un objeto
+                    // IEnumerable que contiene los elementos de la lista
+                    if (field is IEnumerable<object> IEListObjects)
+                    {
+                        // y de ser cierto crea una lista con los elementos en base
+                        // a los IEnumerables
+                        GenObjectList = IEListObjects.ToList();
+
+                        // se recorre cada elemento de la lista para ver si contiene mas
+                        // elementos del mismo tipo dentro o son puros atributos/elementos
+                        // de una lista
+                        foreach (object ObjectList in GenObjectList)
+                        {
+                            ItemType = $"{ObjectList}";
+                            Item = GetTypeByElement(ObjectList.GetType());
+
+                            if (ObjectList != GenObjectList.First())
+                            {
+                                if (ItemType == Item)
+                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
+                            }
+                            else
+                            {
+                                //Agrega la Flag con el nombre de la Lista,
+                                //y el tipo de dato que usa entre parentesis
+                                //por ejemplo: \n<List_Words>(string)
+                                Result += $"\n<{ItemField.Name}>({Item})";
+
+
+                                //Agrega cada elemento que contiene la
+                                //lista compleja de primer nivel adentro
+                                //de su etiqueta.
+                                //Por ejemplo: \n![Word]
+                                if (ItemType == Item)
+                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
+                            }
+
+
+                            if (ItemType != Item)
+                            {
+                                //Agrega cada elemento que contiene la
+                                //lista compleja de segundo nivel
+                                //dentro de su etiqueta.
+                                //Por ejemplo: \n![Hello_World]
+                                Result += $"\n![{ObjectList}]";
+                            }
+
+
+                            //Hace un uso recursivo para poder extraer la data
+                            //de todos los elementos que se encuentren a un
+                            //nivel inferior dentro del objeto evaluado
+                            Result += ItemsFromClass(ObjectList, ObjectList.GetType());
+                            if (ObjectList == GenObjectList.Last())
+                            {
+                                //Si el tipo del ItemField es igual al ItemField(Number==Number),
+                                //escribe esto por ejemplo: \n</Anime>\n\n
+                                if (ItemType == Item)
+                                {
+                                    //Evalua si lo que tiene por detras es un
+                                    //salto de linea y de serlo imprime lo primero
+                                    //de lo contrario imprime lo segundo
+                                    if (Result[Result.Length - 1].ToString() == "\n")
+                                        Result += $"</{ItemField.Name}>\n\n";
+                                    else
+                                        Result += $"\n</{ItemField.Name}>\n\n";
+                                }
+
+                                //Si no escribira esto por ejemplo: \n</List_Words>\n\n
+                                else
+                                {
+                                    Result += $"\n</{ItemField.Name}>";
+                                }
+
+
+                                //la diferencia entre el primer caso y el ultimo
+                                //consiste en que el primer caso permite la
+                                //separacion entre objetos pertenecientes a una
+                                //"Lista Compleja" a diferencia del segundo caso
+                                //por eso el doble salto de linea en el primer caso,
+                                //esto se hace para el cierre de Flags del objeto
+                                //correspondiente
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
 

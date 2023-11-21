@@ -21,6 +21,7 @@ public class Anime
     public List<string> Movies = new() { "None" };
     public List<string> SpinOffs = new() { "None" };
     public float Ovas = 0;
+    public DataBase data_anime = new();
 }
 
 
