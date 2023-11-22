@@ -137,7 +137,7 @@ namespace JDot_Parser.Systems
             FieldInfo[] Fields = type.GetFields();
             foreach (FieldInfo ItemField in Fields)
             {
-                object field = ItemField.GetValue(Class);
+                object FieldValue = ItemField.GetValue(Class);
 
                 // Agrega un nuevo elemento junto con su valor
                 // mientras sea un dato primitivo,
@@ -145,12 +145,12 @@ namespace JDot_Parser.Systems
                 if (!IsGenericList(ItemField) && ItemField.Name != "Empty")
                     //Revisa si es el ultimo elemento de la lista
                     if (ItemField == Fields[Fields.Length - 1])
-                        if (DataTypes.TryGetValue(type, out string value))
-                            Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>\n";
+                        if (DataTypes.TryGetValue(ItemField.FieldType, out string value))
+                            Result += $"\n<<{ItemField.Name}: {FieldValue}>>\n";
                         else
-                            Result += $"\n\n{ClassToString(field)}\n";
+                            Result += $"\n\n{ClassToString(FieldValue)}\n";
                     else
-                        Result += $"\n<<{ItemField.Name}: {ItemField.GetValue(Class)}>>";
+                        Result += $"\n<<{ItemField.Name}: {FieldValue}>>";
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
@@ -163,7 +163,7 @@ namespace JDot_Parser.Systems
                     // se compreba si el valor de la lista de elementos es un
                     // IEnumerable de objetos ademas de que los crea un objeto
                     // IEnumerable que contiene los elementos de la lista
-                    if (field is IEnumerable<object> IEListObjects)
+                    if (FieldValue is IEnumerable<object> IEListObjects)
                     {
                         // y de ser cierto crea una lista con los elementos en base
                         // a los IEnumerables
@@ -255,7 +255,7 @@ namespace JDot_Parser.Systems
         /// Is a Generic List
         /// </summary>
         /// <param name="fieldInfo">List</param>
-        /// <returns>True or False if the field is generic or not</returns>
+        /// <returns>True or False if the FieldValue is generic or not</returns>
         static bool IsGenericList(FieldInfo fieldInfo)
         {
             return fieldInfo.FieldType.IsGenericType &&
@@ -347,8 +347,7 @@ namespace JDot_Parser.Systems
         /// <returns></returns>
         object GetClassByString(object Class, string Data)
         {
-            string[] DataLines = Data.Split(@"\n");
-            return MergeDataToClass(Class,DataLines);
+            return MergeDataToClass(Class, Data.Split(@"\n"));
         }
 
 
