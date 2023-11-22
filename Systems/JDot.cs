@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace JDot_Parser
+namespace JDot_Parser.Systems
 {
     public class JDot
     {
@@ -72,7 +72,7 @@ namespace JDot_Parser
 
             // Verificar si el tipo GenClass es un tipo válido
             // (por ejemplo, una clase con un constructor sin parámetros).
-            if (!GenClassType.IsClass && GenClassType.IsAbstract &&
+            if (!GenClassType.IsClass && GenClassType.IsAbstract && 
                 GenClassType.GetConstructor(Type.EmptyTypes) == null)
             {
                 // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
@@ -154,7 +154,7 @@ namespace JDot_Parser
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
-                if (IsGenericList(ItemField))
+                if(IsGenericList(ItemField))
                 {
                     // Result += $"\n\t<{ItemField.Name}>";
                     // en caso de ser cierto lo que hace es crear una
@@ -176,7 +176,7 @@ namespace JDot_Parser
                         {
                             ItemType = $"{ObjectList}";
                             Item = GetTypeByElement(ObjectList.GetType());
-
+                            
                             if (ObjectList != GenObjectList.First())
                             {
                                 if (ItemType == Item)
@@ -197,7 +197,7 @@ namespace JDot_Parser
                                 if (ItemType == Item)
                                     Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
                             }
-
+                                
 
                             if (ItemType != Item)
                             {
@@ -222,7 +222,7 @@ namespace JDot_Parser
                                     //Evalua si lo que tiene por detras es un
                                     //salto de linea y de serlo imprime lo primero
                                     //de lo contrario imprime lo segundo
-                                    if (Result[Result.Length - 1].ToString() == "\n")
+                                    if (Result[Result.Length-1].ToString() == "\n")
                                         Result += $"</{ItemField.Name}>\n\n";
                                     else
                                         Result += $"\n</{ItemField.Name}>\n\n";
@@ -305,7 +305,7 @@ namespace JDot_Parser
         object ToClass(string Data, object cls, bool IsPath)
         {
             object obj_Result = default;
-            if ((Data == null || Data == "") && cls.GetType().IsPrimitive
+            if ((Data == null || Data == "") && cls.GetType().IsPrimitive 
                 && !cls.GetType().IsClass)
             {
                 //Regresa un objeto vacio del tipo que se
@@ -348,7 +348,7 @@ namespace JDot_Parser
         object GetClassByString(object Class, string Data)
         {
             string[] DataLines = Data.Split(@"\n");
-            return MergeDataToClass(Class, DataLines);
+            return MergeDataToClass(Class,DataLines);
         }
 
 

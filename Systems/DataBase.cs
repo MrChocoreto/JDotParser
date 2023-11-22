@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public class DataBase 
 {
     public List<Anime> AnimeList = new();
