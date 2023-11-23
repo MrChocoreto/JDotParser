@@ -1,4 +1,4 @@
-﻿namespace JDot_Parser.Systems
+﻿namespace JDot_Parser
 {
     public class JDot
     {
@@ -70,7 +70,7 @@
 
             // Verificar si el tipo GenClass es un tipo válido
             // (por ejemplo, una clase con un constructor sin parámetros).
-            if (!GenClassType.IsClass && GenClassType.IsAbstract && 
+            if (!GenClassType.IsClass && GenClassType.IsAbstract &&
                 GenClassType.GetConstructor(Type.EmptyTypes) == null)
             {
                 // Manejar el error si GenClass no es un tipo válido para la creación de instancias.
@@ -111,9 +111,9 @@
             string stg_Result = default;
             if (Class != null && !Class.GetType().IsPrimitive)
             {
-                stg_Result += $"<{Class.GetType().Name}>";
-                stg_Result += ItemsFromClass(Class, Class.GetType());
-                stg_Result += $"\n</{Class.GetType().Name}>";
+                stg_Result += $"<{Class.GetType().Name}> " +
+                $"{ItemsFromClass(Class, Class.GetType())}" +
+                $"\n</{Class.GetType().Name}>";
             }
             return stg_Result;
         }
@@ -144,7 +144,7 @@
                     //Revisa si es el ultimo elemento de la lista
                     if (ItemField == Fields[Fields.Length - 1])
                         if (DataTypes.TryGetValue(ItemField.FieldType, out string value))
-                            Result += $"\n<<{ItemField.Name}: {FieldValue}>>\n";
+                            Result += $"\n<<{ItemField.Name}: {FieldValue}>>";
                         else
                             Result += $"\n\n{ClassToString(FieldValue)}\n";
                     else
@@ -152,7 +152,7 @@
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
-                if(IsGenericList(ItemField))
+                if (IsGenericList(ItemField))
                 {
                     // Result += $"\n\t<{ItemField.Name}>";
                     // en caso de ser cierto lo que hace es crear una
@@ -174,9 +174,13 @@
                         {
                             ItemType = $"{ObjectList}";
                             Item = GetTypeByElement(ObjectList.GetType());
-                            
+
                             if (ObjectList != GenObjectList.First())
                             {
+                                //Agrega la Flag con el nombre del elemento
+                                //de la Lista,y el indice del elemento
+                                //entre parentesis
+                                //por ejemplo: \n!<[Word(0)]>
                                 if (ItemType == Item)
                                     Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
                             }
@@ -188,14 +192,14 @@
                                 Result += $"\n<{ItemField.Name}>({Item})";
 
 
-                                //Agrega cada elemento que contiene la
-                                //lista compleja de primer nivel adentro
-                                //de su etiqueta.
-                                //Por ejemplo: \n![Word]
+                                //Agrega la Flag con el nombre del elemento
+                                //de la Lista,y el indice del elemento
+                                //entre parentesis
+                                //por ejemplo: \n!<[Word(0)]>
                                 if (ItemType == Item)
                                     Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
                             }
-                                
+
 
                             if (ItemType != Item)
                             {
@@ -203,7 +207,7 @@
                                 //lista compleja de segundo nivel
                                 //dentro de su etiqueta.
                                 //Por ejemplo: \n![Hello_World]
-                                Result += $"\n![{ObjectList}]";
+                                Result += $"\n  ![{ObjectList}]";
                             }
 
 
@@ -220,7 +224,7 @@
                                     //Evalua si lo que tiene por detras es un
                                     //salto de linea y de serlo imprime lo primero
                                     //de lo contrario imprime lo segundo
-                                    if (Result[Result.Length-1].ToString() == "\n")
+                                    if (Result[Result.Length - 1].ToString() == "\n")
                                         Result += $"</{ItemField.Name}>\n\n";
                                     else
                                         Result += $"\n</{ItemField.Name}>\n\n";
@@ -254,11 +258,9 @@
         /// </summary>
         /// <param name="fieldInfo">List</param>
         /// <returns>True or False if the FieldValue is generic or not</returns>
-        static bool IsGenericList(FieldInfo fieldInfo)
-        {
-            return fieldInfo.FieldType.IsGenericType &&
+        static bool IsGenericList(FieldInfo fieldInfo) =>
+            fieldInfo.FieldType.IsGenericType &&
             fieldInfo.FieldType.GetGenericTypeDefinition() == typeof(List<>);
-        }
 
 
         /// <summary>
@@ -287,10 +289,7 @@
         /// </summary>
         /// <typeparam name="GenClass">Is the Generic type</typeparam>
         /// <returns>The type that correspond with the Generic type</returns>
-        Type GetTypeOfGeneric<GenClass>()
-        {
-            return typeof(GenClass);
-        }
+        Type GetTypeOfGeneric<GenClass>() => typeof(GenClass);
 
 
         /// <summary>
@@ -303,7 +302,7 @@
         object ToClass(string Data, object cls, bool IsPath)
         {
             object obj_Result = default;
-            if ((Data == null || Data == "") && cls.GetType().IsPrimitive 
+            if ((Data == null || Data == "") && cls.GetType().IsPrimitive
                 && !cls.GetType().IsClass)
             {
                 //Regresa un objeto vacio del tipo que se
@@ -343,10 +342,8 @@
         /// <param name="Class"></param>
         /// <param name="Data"></param>
         /// <returns></returns>
-        object GetClassByString(object Class, string Data)
-        {
-            return MergeDataToClass(Class, Data.Split(@"\n"));
-        }
+        object GetClassByString(object Class, string Data) =>
+            MergeDataToClass(Class, Data.Split(@"\n"));
 
 
         /// <summary>
@@ -356,13 +353,12 @@
         /// <returns></returns>
         string[] GetDataByPath(string DataPath)
         {
-            string DataLines;
             if (!File.Exists(DataPath))
                 return null;
             else
             {
                 StreamReader Reader = new(DataPath);
-                DataLines = Reader.ReadToEnd();
+                string DataLines = Reader.ReadToEnd();
                 Reader.Close();
                 return DataLines.Split("\n");
             }
