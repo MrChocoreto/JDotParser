@@ -1,4 +1,7 @@
-﻿namespace JDot_Parser
+﻿using System.Collections.Generic;
+using System.Text;
+
+namespace JDot_Parser
 {
     public class JDot
     {
@@ -9,7 +12,7 @@
                                           // mdf = MainSaver Data Flag
         const string stg_OMF = "\n</mdf>"; // OMF = Output MainSaver Flag
 
-        readonly Dictionary<Type, string> DataTypes = new()
+        IReadOnlyDictionary<Type, string> DataTypes = new Dictionary<Type, string>
         {
             {typeof(int), "int"},
             {typeof(double), "double"},
@@ -20,7 +23,7 @@
             {typeof(bool), "bool"},
         };
 
-        readonly Dictionary<string, Type> GenericFlags = new()
+        IReadOnlyDictionary<string, Type> GenericFlags = new Dictionary<string, Type>
         {
             {"int",typeof(int)},
             {"double", typeof(double) },
@@ -127,7 +130,7 @@
         /// <returns>Content of the Class</returns>
         string ItemsFromClass(object Class, Type type)
         {
-            string Result = default;
+            StringBuilder Result = default;
             string ItemType;
             string Item;
             // recupero todos los elementos ya sea de una clase o de una lista
@@ -144,11 +147,11 @@
                     //Revisa si es el ultimo elemento de la lista
                     if (ItemField == Fields[Fields.Length - 1])
                         if (DataTypes.TryGetValue(ItemField.FieldType, out string value))
-                            Result += $"\n<<{ItemField.Name}: {FieldValue}>>";
+                            Result.Append($"\n<<{ItemField.Name}: {FieldValue}>>");
                         else
-                            Result += $"\n\n{ClassToString(FieldValue)}\n";
+                            Result.Append($"\n\n{ClassToString(FieldValue)}\n");
                     else
-                        Result += $"\n<<{ItemField.Name}: {FieldValue}>>";
+                        Result.Append($"\n<<{ItemField.Name}: {FieldValue}>>");
 
                 // comprueba si lo que se le esta pasando es una lista
                 // de tipo generico
@@ -182,14 +185,14 @@
                                 //entre parentesis
                                 //por ejemplo: \n!<[Word(0)]>
                                 if (ItemType == Item)
-                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
+                                    Result.Append($"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>");
                             }
                             else
                             {
                                 //Agrega la Flag con el nombre de la Lista,
                                 //y el tipo de dato que usa entre parentesis
                                 //por ejemplo: \n<List_Words>(string)
-                                Result += $"\n<{ItemField.Name}>({Item})";
+                                Result.Append($"\n<{ItemField.Name}>({Item})");
 
 
                                 //Agrega la Flag con el nombre del elemento
@@ -197,7 +200,7 @@
                                 //entre parentesis
                                 //por ejemplo: \n!<[Word(0)]>
                                 if (ItemType == Item)
-                                    Result += $"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>";
+                                    Result.Append($"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>");
                             }
 
 
@@ -207,14 +210,14 @@
                                 //lista compleja de segundo nivel
                                 //dentro de su etiqueta.
                                 //Por ejemplo: \n![Hello_World]
-                                Result += $"\n  ![{ObjectList}]";
+                                Result.Append($"\n  ![{ObjectList}]");
                             }
 
 
                             //Hace un uso recursivo para poder extraer la data
                             //de todos los elementos que se encuentren a un
                             //nivel inferior dentro del objeto evaluado
-                            Result += ItemsFromClass(ObjectList, ObjectList.GetType());
+                            Result.Append(ItemsFromClass(ObjectList, ObjectList.GetType()));
                             if (ObjectList == GenObjectList.Last())
                             {
                                 //Si el tipo del ItemField es igual al ItemField(Number==Number),
@@ -225,15 +228,15 @@
                                     //salto de linea y de serlo imprime lo primero
                                     //de lo contrario imprime lo segundo
                                     if (Result[Result.Length - 1].ToString() == "\n")
-                                        Result += $"</{ItemField.Name}>\n\n";
+                                        Result.Append($"</{ItemField.Name}>\n\n");
                                     else
-                                        Result += $"\n</{ItemField.Name}>\n\n";
+                                        Result.Append($"\n</{ItemField.Name}>\n\n");
                                 }
 
                                 //Si no escribira esto por ejemplo: \n</List_Words>\n\n
                                 else
                                 {
-                                    Result += $"\n</{ItemField.Name}>";
+                                    Result.Append($"\n</{ItemField.Name}>");
                                 }
 
 
@@ -249,7 +252,7 @@
                     }
                 }
             }
-            return Result;
+            return Result.ToString();
         }
 
 
@@ -296,26 +299,24 @@
         /// Convet String To Class
         /// </summary>
         /// <param name="Data"></param>
-        /// <param name="cls">Class</param>
+        /// <param name="Class">Class</param>
         /// <param name="IsPath"></param>
         /// <returns></returns>
-        object ToClass(string Data, object cls, bool IsPath)
+        object ToClass(string Data, object Class, bool IsPath)
         {
-            object obj_Result = default;
-            if ((Data == null || Data == "") && cls.GetType().IsPrimitive
-                && !cls.GetType().IsClass)
+            if ((Data == null || Data == "") && Class.GetType().IsPrimitive
+                && !Class.GetType().IsClass)
             {
                 //Regresa un objeto vacio del tipo que se
                 //le esta pasando en caso de que no cumpla
                 //con las condiciones
-                return cls;
+                return Class;
             }
             else
             {
                 //Se pasa a convertir la data en el objeto
                 //que se espera
-                return obj_Result = IsPath ? GetClassByPath(cls, Data) :
-                                     GetClassByString(cls, Data);
+                return IsPath ? GetClassByPath(Class, Data) : GetClassByString(Class, Data);
             }
         }
 
