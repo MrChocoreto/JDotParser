@@ -1,2 +1,5 @@
 # JDot Parser
-This is a library from CSharp that want give you an alternative from Json Utility.
+This is a library for CSharp that wants provide you an alternative to Json Utility
+using its own sintax and a layer to criptography
+
+## Instalation
