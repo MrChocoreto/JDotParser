@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace JDot_Parser
 {
     public class JDot
@@ -44,12 +42,19 @@ namespace JDot_Parser
 
         #region Save_Data
 
+        public static string ClassToText(object Class)
+        {
+            return new JDot().ToDataFile(Class);
+        }
+
+
+
         /// <summary>
         /// Convert a Class into String Format like a XML 
         /// </summary>
         /// <param name="Class">The Class that you want convert</param>
         /// <returns>The Class converted to String</returns>
-        public string ToDataFile(object Class)
+        string ToDataFile(object Class)
         {
             return stg_IMF + ClassToString(Class) + stg_OMF;
         }
@@ -60,13 +65,19 @@ namespace JDot_Parser
 
         #region Get_Data
 
+        public static T FileToClass<T>(string Data, bool IsPath = false) {
+            return new JDot().ToDataClass<T>(Data, IsPath);
+        }
+
+
+
         /// <summary>
         /// Convert a String into Class
         /// </summary>
         /// <param name="Data">String that contain the Data</param>
         /// <param name="IsPath">Determine if the "StringData" is a Path or the Data in a string</param>
         /// <returns>String converted into the Class that you need</returns>
-        public GenClass ToDataClass<GenClass>(string Data, bool IsPath = false)
+        GenClass ToDataClass<GenClass>(string Data, bool IsPath = false)
         {
             //GenClass = Generic Class
             Type GenClassType = GetTypeOfGeneric<GenClass>();
@@ -130,9 +141,9 @@ namespace JDot_Parser
         /// <returns>Content of the Class</returns>
         string ItemsFromClass(object Class, Type type)
         {
-            StringBuilder Result = default;
-            string ItemType;
-            string Item;
+            StringBuilder Result = new();
+            string ItemType = default;
+            string Item = default;
             // recupero todos los elementos ya sea de una clase o de una lista
             // en un Array de FieldsInfo para poder trabajar cada uno individualmente
             FieldInfo[] Fields = type.GetFields();
@@ -164,96 +175,110 @@ namespace JDot_Parser
                     // se compreba si el valor de la lista de elementos es un
                     // IEnumerable de objetos ademas de que los crea un objeto
                     // IEnumerable que contiene los elementos de la lista
-                    if (FieldValue is IEnumerable<object> IEListObjects)
-                    {
-                        // y de ser cierto crea una lista con los elementos en base
-                        // a los IEnumerables
-                        GenObjectList = IEListObjects.ToList();
-
-                        // se recorre cada elemento de la lista para ver si contiene mas
-                        // elementos del mismo tipo dentro o son puros atributos/elementos
-                        // de una lista
-                        foreach (object ObjectList in GenObjectList)
-                        {
-                            ItemType = $"{ObjectList}";
-                            Item = GetTypeByElement(ObjectList.GetType());
-
-                            if (ObjectList != GenObjectList.First())
-                            {
-                                //Agrega la Flag con el nombre del elemento
-                                //de la Lista,y el indice del elemento
-                                //entre parentesis
-                                //por ejemplo: \n!<[Word(0)]>
-                                if (ItemType == Item)
-                                    Result.Append($"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>");
-                            }
-                            else
-                            {
-                                //Agrega la Flag con el nombre de la Lista,
-                                //y el tipo de dato que usa entre parentesis
-                                //por ejemplo: \n<List_Words>(string)
-                                Result.Append($"\n<{ItemField.Name}>({Item})");
-
-
-                                //Agrega la Flag con el nombre del elemento
-                                //de la Lista,y el indice del elemento
-                                //entre parentesis
-                                //por ejemplo: \n!<[Word(0)]>
-                                if (ItemType == Item)
-                                    Result.Append($"\n\n!<[{Item}({GenObjectList.IndexOf(ObjectList)})]>");
-                            }
-
-
-                            if (ItemType != Item)
-                            {
-                                //Agrega cada elemento que contiene la
-                                //lista compleja de segundo nivel
-                                //dentro de su etiqueta.
-                                //Por ejemplo: \n![Hello_World]
-                                Result.Append($"\n  ![{ObjectList}]");
-                            }
-
-
-                            //Hace un uso recursivo para poder extraer la data
-                            //de todos los elementos que se encuentren a un
-                            //nivel inferior dentro del objeto evaluado
-                            Result.Append(ItemsFromClass(ObjectList, ObjectList.GetType()));
-                            if (ObjectList == GenObjectList.Last())
-                            {
-                                //Si el tipo del ItemField es igual al ItemField(Number==Number),
-                                //escribe esto por ejemplo: \n</Anime>\n\n
-                                if (ItemType == Item)
-                                {
-                                    //Evalua si lo que tiene por detras es un
-                                    //salto de linea y de serlo imprime lo primero
-                                    //de lo contrario imprime lo segundo
-                                    if (Result[Result.Length - 1].ToString() == "\n")
-                                        Result.Append($"</{ItemField.Name}>\n\n");
-                                    else
-                                        Result.Append($"\n</{ItemField.Name}>\n\n");
-                                }
-
-                                //Si no escribira esto por ejemplo: \n</List_Words>\n\n
-                                else
-                                {
-                                    Result.Append($"\n</{ItemField.Name}>");
-                                }
-
-
-                                //la diferencia entre el primer caso y el ultimo
-                                //consiste en que el primer caso permite la
-                                //separacion entre objetos pertenecientes a una
-                                //"Lista Compleja" a diferencia del segundo caso
-                                //por eso el doble salto de linea en el primer caso,
-                                //esto se hace para el cierre de Flags del objeto
-                                //correspondiente
-                            }
-                        }
-                    }
+                    Result = DataSerializer(Result, FieldValue, GenObjectList,new string[] { Item, ItemType, ItemField.Name});
                 }
             }
             return Result.ToString();
         }
+
+
+        StringBuilder DataSerializer(StringBuilder Data, object FieldValue, 
+            IList<object> GenObjectList,string[] Item_ItemType)
+        {
+            //El elemento '0' de Item_ItemType es la variable Item,
+            //el elemento '1' es la variable ItemType y el elemento '2'
+            //es la propiedad ItemField.Name
+
+            StringBuilder Result = Data;
+            if (FieldValue is IEnumerable<object> IEListObjects)
+            {
+                // y de ser cierto crea una lista con los elementos en base
+                // a los IEnumerables
+                GenObjectList = IEListObjects.ToList();
+
+                // se recorre cada elemento de la lista para ver si contiene mas
+                // elementos del mismo tipo dentro o son puros atributos/elementos
+                // de una lista
+                foreach (object ObjectList in GenObjectList)
+                {
+                    Item_ItemType[1] = $"{ObjectList}";
+                    Item_ItemType[0] = GetTypeByElement(ObjectList.GetType());
+
+                    if (ObjectList != GenObjectList.First())
+                    {
+                        //Agrega la Flag con el nombre del elemento
+                        //de la Lista,y el indice del elemento
+                        //entre parentesis
+                        //por ejemplo: \n!<[Word(0)]>
+                        if (Item_ItemType[1] == Item_ItemType[0])
+                            Result.Append($"\n\n!<[{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})]>");
+                    }
+                    else
+                    {
+                        //Agrega la Flag con el nombre de la Lista,
+                        //y el tipo de dato que usa entre parentesis
+                        //por ejemplo: \n<List_Words>(string)
+                        Result.Append($"\n<{Item_ItemType[2]}>({Item_ItemType[0]})");
+
+
+                        //Agrega la Flag con el nombre del elemento
+                        //de la Lista,y el indice del elemento
+                        //entre parentesis
+                        //por ejemplo: \n!<[Word(0)]>
+                        if (Item_ItemType[1] == Item_ItemType[0])
+                            Result.Append($"\n\n!<[{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})]>");
+                    }
+
+
+                    if (Item_ItemType[1] != Item_ItemType[0])
+                    {
+                        //Agrega cada elemento que contiene la
+                        //lista compleja de segundo nivel
+                        //dentro de su etiqueta.
+                        //Por ejemplo: \n![Hello_World]
+                        Result.Append($"\n  ![{ObjectList}]");
+                    }
+
+
+                    //Hace un uso recursivo para poder extraer la data
+                    //de todos los elementos que se encuentren a un
+                    //nivel inferior dentro del objeto evaluado
+                    Result.Append(ItemsFromClass(ObjectList, ObjectList.GetType()));
+                    if (ObjectList == GenObjectList.Last())
+                    {
+                        //Si el tipo del ItemField es igual al ItemField(Number==Number),
+                        //escribe esto por ejemplo: \n</Anime>\n\n
+                        if (Item_ItemType[1] == Item_ItemType[0])
+                        {
+                            //Evalua si lo que tiene por detras es un
+                            //salto de linea y de serlo imprime lo primero
+                            //de lo contrario imprime lo segundo
+                            if (Result[Result.Length - 1].ToString() == "\n")
+                                Result.Append($"</{Item_ItemType[2]}>\n\n");
+                            else
+                                Result.Append($"\n</{Item_ItemType[2]}>\n\n");
+                        }
+
+                        //Si no escribira esto por ejemplo: \n</List_Words>\n\n
+                        else
+                        {
+                            Result.Append($"\n</{Item_ItemType[2]}>");
+                        }
+
+
+                        //la diferencia entre el primer caso y el ultimo
+                        //consiste en que el primer caso permite la
+                        //separacion entre objetos pertenecientes a una
+                        //"Lista Compleja" a diferencia del segundo caso
+                        //por eso el doble salto de linea en el primer caso,
+                        //esto se hace para el cierre de Flags del objeto
+                        //correspondiente
+                    }
+                }
+            }
+            return Result;
+        }
+
 
 
         /// <summary>
@@ -316,20 +341,20 @@ namespace JDot_Parser
             {
                 //Se pasa a convertir la data en el objeto
                 //que se espera
-                return IsPath ? GetClassByPath(Class, Data) : GetClassByString(Class, Data);
+                return IsPath ? GetDataByPath(Class, Data) : GetDataByString(Class, Data);
             }
         }
 
 
         /// <summary>
-        /// Get Class By Path
+        /// Get Data By Path
         /// </summary>
         /// <param name="Class"></param>
         /// <param name="DataPath"></param>
         /// <returns></returns>
-        object GetClassByPath(object Class, string DataPath)
+        object GetDataByPath(object Class, string DataPath)
         {
-            string[] DataLines = GetDataByPath(DataPath);
+            string[] DataLines = SearchDataByPath(DataPath);
             if (DataLines == null)
                 return Class;
             else
@@ -338,12 +363,12 @@ namespace JDot_Parser
 
 
         /// <summary>
-        /// Get Class By String
+        /// Get Data By String
         /// </summary>
         /// <param name="Class"></param>
         /// <param name="Data"></param>
         /// <returns></returns>
-        object GetClassByString(object Class, string Data) =>
+        object GetDataByString(object Class, string Data) =>
             MergeDataToClass(Class, Data.Split(@"\n"));
 
 
@@ -352,7 +377,7 @@ namespace JDot_Parser
         /// </summary>
         /// <param name="DataPath"></param>
         /// <returns></returns>
-        string[] GetDataByPath(string DataPath)
+        string[] SearchDataByPath(string DataPath)
         {
             if (!File.Exists(DataPath))
                 return null;
@@ -367,7 +392,7 @@ namespace JDot_Parser
 
 
         /// <summary>
-        /// Merge the data to a class
+        /// Merge the Data to Class
         /// </summary>
         /// <param name="Class"></param>
         /// <param name="DataLines"></param>
