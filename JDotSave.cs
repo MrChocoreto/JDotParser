@@ -101,12 +101,8 @@ public class JDotSave
                 // se compreba si el valor de la lista de elementos es un
                 // IEnumerable de objetos ademas de que los crea un objeto
                 // IEnumerable que contiene los elementos de la lista
-<<<<<<< HEAD
                 Result = DataSerializer(Result, FieldValue, GenObjectList, 
                         new string[] { Item, ItemType, ItemField.Name });
-=======
-                Result = DataSerializer(Result, FieldValue, GenObjectList, new string[] { Item, ItemType, ItemField.Name });
->>>>>>> 35662436bcfbafdc8627ee99a8048a875ae3bfcb
             }
         }
         return Result.ToString();
