@@ -37,10 +37,6 @@ public class JDotSave
 
     #region Private_Methods
 
-
-    #region Class_To_Text
-
-
     /// <summary>
     /// Class To String
     /// </summary>
@@ -234,7 +230,5 @@ public class JDotSave
 
     #endregion
 
-
-    #endregion
 
 }
