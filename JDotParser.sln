@@ -5,7 +5,11 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JDotParser", "JDotParser.csproj", "{02E726AF-042A-4DD5-A546-3076B54D7AB4}"
 EndProject
+<<<<<<< Updated upstream
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JDot-Testing", "..\JDot-Testing\JDot-Testing.csproj", "{5572C02E-B58B-40A9-B062-2B86AAC9A6AE}"
+=======
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JDot-Testing", "..\JDot-Testing\JDot-Testing.csproj", "{67F5F306-488B-42AD-815C-951F2CEA7EA2}"
+>>>>>>> Stashed changes
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +21,17 @@ Global
 		{02E726AF-042A-4DD5-A546-3076B54D7AB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02E726AF-042A-4DD5-A546-3076B54D7AB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02E726AF-042A-4DD5-A546-3076B54D7AB4}.Release|Any CPU.Build.0 = Release|Any CPU
+<<<<<<< Updated upstream
 		{5572C02E-B58B-40A9-B062-2B86AAC9A6AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5572C02E-B58B-40A9-B062-2B86AAC9A6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5572C02E-B58B-40A9-B062-2B86AAC9A6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5572C02E-B58B-40A9-B062-2B86AAC9A6AE}.Release|Any CPU.Build.0 = Release|Any CPU
+=======
+		{67F5F306-488B-42AD-815C-951F2CEA7EA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67F5F306-488B-42AD-815C-951F2CEA7EA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67F5F306-488B-42AD-815C-951F2CEA7EA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67F5F306-488B-42AD-815C-951F2CEA7EA2}.Release|Any CPU.Build.0 = Release|Any CPU
+>>>>>>> Stashed changes
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
