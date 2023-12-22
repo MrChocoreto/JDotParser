@@ -1,5 +1,4 @@
-﻿
-namespace JDot_Parser
+﻿namespace JDotParser
 {
     public class JDot
     {

@@ -51,7 +51,7 @@ public class JDotSave
         string stg_Result = default;
         if (Class != null && !Class.GetType().IsPrimitive)
         {
-            stg_Result += $"<{Class.GetType().Name}> " +
+            stg_Result += $"<{Class.GetType().Name}>" +
             $"{ItemsFromClass(Class, Class.GetType())}" +
             $"\n</{Class.GetType().Name}>";
         }
@@ -81,14 +81,19 @@ public class JDotSave
             // mientras sea un dato primitivo,
             // por ejemplo: \n\t<<Creador: John Carmack>>
             if (!IsGenericList(ItemField) && ItemField.Name != "Empty")
+            {
+                bool PrimitiveExist = new JDotCons().DataTypes.TryGetValue(ItemField.FieldType, out string value);
+
                 //Revisa si es el ultimo elemento de la lista
                 if (ItemField == Fields[Fields.Length - 1])
-                    if (new JDotCons().DataTypes.TryGetValue(ItemField.FieldType, out string value))
-                        Result.Append($"\n<<{ItemField.Name}: {FieldValue}>>");
+                    if (PrimitiveExist)
+                        Result.Append($"\n<<{ItemField.Name}({value}): {FieldValue}>>");
                     else
                         Result.Append($"\n\n{ClassToString(FieldValue)}\n");
                 else
-                    Result.Append($"\n<<{ItemField.Name}: {FieldValue}>>");
+                    Result.Append($"\n<<{ItemField.Name}({value}): {FieldValue}>>");
+
+            }
 
             // comprueba si lo que se le esta pasando es una lista
             // de tipo generico
