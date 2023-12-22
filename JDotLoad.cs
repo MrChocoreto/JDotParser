@@ -146,8 +146,9 @@
             // por ejemplo: \n\t<<Creador(string): John Carmack>>
             if (!IsGenericList(ItemField))
                 ItemField.SetValue(Class, GetPrimitiveValue(DataLines[DataLinesIndex], ItemField.Name));
-            else
+            else{
                 //ToDo: Cargar los datos de una lista
+            }
             DataLinesIndex++;
         }
         return Class;
@@ -163,17 +164,24 @@
     object GetPrimitiveValue(string dataLine, string fieldName)
     {
         string[] data = dataLine.Split(": ");
-        Type typeOfData;
         data[1] = data[1].Replace(">>", "");
         data[0] = data[0].Replace("<<", "");
         data[0] = data[0].Replace(">>", "");
         string dataValue = data[1];
         data = data[0].Split("(");
         data[1] = data[1].Replace(")", "");
-        typeOfData = GetTypeByGenericFlag(data[1]);
+        try
+        {
+            Type typeOfData = GetTypeByGenericFlag(data[1]);
+            if (typeOfData != null)
+                return Convert.ChangeType(dataValue, typeOfData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Excepción: " + ex.Message);
+        }
 
-        if (typeOfData != null)
-            return Convert.ChangeType(dataValue, typeOfData);
+
         return null;
     }
 
