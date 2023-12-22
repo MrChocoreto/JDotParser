@@ -37,11 +37,6 @@ public class JDotSave
 
     #region Private_Methods
 
-    /// <summary>
-    /// Class To String
-    /// </summary>
-    /// <param name="Class"> </param>
-    /// <returns>Result of convert your class to Text</returns>
     string ClassToString(object Class)
     {
         string stg_Result = default;
@@ -110,6 +105,15 @@ public class JDotSave
     }
 
 
+
+    /// <summary>
+    /// Data Serializer
+    /// </summary>
+    /// <param name="Data"></param>
+    /// <param name="FieldValue"></param>
+    /// <param name="GenObjectList"></param>
+    /// <param name="Item_ItemType"></param>
+    /// <returns></returns>
     StringBuilder DataSerializer(StringBuilder Data, object FieldValue,
         IList<object> GenObjectList, string[] Item_ItemType)
     {
@@ -219,11 +223,6 @@ public class JDotSave
         fieldInfo.FieldType.GetGenericTypeDefinition() == typeof(List<>);
 
 
-    /// <summary>
-    /// Get Type By Element
-    /// </summary>
-    /// <param name="type">Type of the Object</param>
-    /// <returns>A string with the "Type" of the object </returns>
     string GetTypeByElement(Type type)
     {
         if (new JDotCons().DataTypes.TryGetValue(type, out string value))

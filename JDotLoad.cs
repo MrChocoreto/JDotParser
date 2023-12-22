@@ -1,14 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-public class JDotLoad
+﻿public class JDotLoad
 {
+
+    #region Variables
+    JDotCons jDotCons = new();
+
+
+    #endregion
+
+
+
 
     #region Public_Methods
     /// <summary>
     /// Convert a String into Class
     /// </summary>
-    /// <param name="Data">String that contain the Data</param>
-    /// <param name="IsPath">Determine if the "StringData" is a Path or the Data in a string</param>
+    /// <param name="Data">String that contain the data</param>
+    /// <param name="IsPath">Determine if the "StringData" is a Path or the data in a string</param>
     /// <returns>String converted into the Class that you need</returns>
     public GenClass ToDataClass<GenClass>(string Data, bool IsPath = false)
     {
@@ -28,7 +35,7 @@ public class JDotLoad
             instance = (GenClass)Activator.CreateInstance(GenClassType);
 
             // Aquí puedes realizar las operaciones necesarias para inicializar
-            // "instance" con los datos de "Data".
+            // "instance" con los datos de "data".
             try
             {
                 instance = (GenClass)ToClass(Data, instance, IsPath);
@@ -72,7 +79,7 @@ public class JDotLoad
 
 
     /// <summary>
-    /// Get Data By Path
+    /// Get data By Path
     /// </summary>
     /// <param name="Class"></param>
     /// <param name="DataPath"></param>
@@ -88,7 +95,7 @@ public class JDotLoad
 
 
     /// <summary>
-    /// Get Data By String
+    /// Get data By String
     /// </summary>
     /// <param name="Class"></param>
     /// <param name="Data"></param>
@@ -101,7 +108,7 @@ public class JDotLoad
 
 
     /// <summary>
-    /// Get Data By Path
+    /// Get data By Path
     /// </summary>
     /// <param name="DataPath"></param>
     /// <returns></returns>
@@ -120,15 +127,13 @@ public class JDotLoad
 
 
     /// <summary>
-    /// Merge the Data to Class
+    /// Merge the data to Class
     /// </summary>
     /// <param name="Class"></param>
     /// <param name="DataLines"></param>
     /// <returns></returns>
     object MergeDataToClass(object Class, string[] DataLines)
     {
-        string ItemType;
-        string Item;
         int DataLinesIndex = 2;
 
         // recupero todos los elementos ya sea de una clase o de una lista
@@ -136,9 +141,6 @@ public class JDotLoad
         FieldInfo[] Fields = Class.GetType().GetFields();
         foreach (FieldInfo ItemField in Fields)
         {
-            // Recupera el tipo de dato del elemento
-            object field = ItemField.GetValue(Class);
-
             // Carga los datos de un elemento siempre que
             // sea un dato primitivo,
             // por ejemplo: \n\t<<Creador(string): John Carmack>>
@@ -155,24 +157,24 @@ public class JDotLoad
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="DataLine"></param>
-    /// <param name="FieldName"></param>
+    /// <param name="dataLine"></param>
+    /// <param name="fieldName"></param>
     /// <returns></returns>
-    object GetPrimitiveValue(string DataLine, string FieldName)
+    object GetPrimitiveValue(string dataLine, string fieldName)
     {
-        string[] Data = DataLine.Split(": ");
-        Data[1] = Data[1].Replace(">>", "");
-        Data[0] = Data[0].Replace("<<", "");
-        Data[0] = Data[0].Replace(">>", "");
-        string DataValue = Data[1];
-        Data = Data[0].Split("(");
-        Data[1] = Data[1].Replace(")", "");
-        Type ResultType = GetTypeByGenericFlag(Data[1]);
+        string[] data = dataLine.Split(": ");
+        Type typeOfData;
+        data[1] = data[1].Replace(">>", "");
+        data[0] = data[0].Replace("<<", "");
+        data[0] = data[0].Replace(">>", "");
+        string dataValue = data[1];
+        data = data[0].Split("(");
+        data[1] = data[1].Replace(")", "");
+        typeOfData = GetTypeByGenericFlag(data[1]);
 
-        if (ResultType != null)
-            return Convert.ChangeType(DataValue, ResultType);
-        else
-            return null;
+        if (typeOfData != null)
+            return Convert.ChangeType(dataValue, typeOfData);
+        return null;
     }
 
 
@@ -196,10 +198,9 @@ public class JDotLoad
     /// <returns></returns>
     Type GetTypeByGenericFlag(string type)
     {
-        if (new JDotCons().GenericFlags.TryGetValue(type, out Type value))
+        if (jDotCons.GenericFlags.TryGetValue(type, out Type value))
             return value;
-        else
-            return null;
+        return null;
     }
 
 
