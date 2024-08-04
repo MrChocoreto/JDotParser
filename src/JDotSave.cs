@@ -6,17 +6,6 @@ using System.Threading.Tasks;
 public class JDotSave
 {
 
-    #region Global_Variables
-
-    const string stg_MIF = "<mdf>\n"; // IMF = Main Input Flag
-                                      // mdf = Main Data Flag
-    const string stg_MOF = "\n</mdf>"; // OMF = Main Output Flag
-
-
-    #endregion
-
-
-
     #region Public_Methods
 
 
@@ -27,7 +16,7 @@ public class JDotSave
     /// <returns>The Class converted to String</returns>
     public string ToDataFile(object Class)
     {
-        return stg_MIF + ClassToString(Class) + stg_MOF;
+        return $"{JDotCons.stg_MIF}\n" + ClassToString(Class) + $"\n{JDotCons.stg_MOF}";
     }
 
 

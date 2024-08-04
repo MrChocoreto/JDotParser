@@ -129,7 +129,8 @@ public class JDotLoad
     object MergeDataToClass<T>(object Class, string[] DataLines)
     {
         int DataLinesIndex = 2;
-
+        if (QuickBreak(DataLines,Class))
+            return Class;
         // recupero todos los elementos ya sea de una clase o de una genList
         // en un Array de FieldsInfo para poder trabajar cada uno individualmente
         FieldInfo[] Fields = Class.GetType().GetFields();
@@ -169,6 +170,16 @@ public class JDotLoad
         return Class;
     }
 
+    bool QuickBreak(string[] data, object genClass)
+    {
+        string classStruct = genClass.GetType().Name;
+        if (data[0] != JDotCons.stg_MIF || data[^1] != JDotCons.stg_MOF
+            || data[1] != $"<{classStruct}>")
+        {
+            return true;
+        }
+        return false;
+    }
 
     object? MakePrimitiveInstance(Type type)
     {
@@ -177,6 +188,8 @@ public class JDotLoad
         else
             return string.Empty;
     }
+
+
 
 
     void AddElementsToGenList(string[] data, Type listType, Type itemType, object? genList, 

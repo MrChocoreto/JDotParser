@@ -1,5 +1,10 @@
 ﻿public class JDotCons
 {
+    public const string stg_MIF = "<mdf>"; // IMF = Main Input Flag
+                                            // mdf = Main Data Flag
+    public const string stg_MOF = "</mdf>"; // OMF = Main Output Flag
+
+
     public readonly IReadOnlyDictionary<Type, string> DataTypes = new Dictionary<Type, string>
     {
         {typeof(int), "int"},
