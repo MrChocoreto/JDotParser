@@ -8,9 +8,9 @@ public class JDotSave
 
     #region Global_Variables
 
-    const string stg_IMF = "<mdf>\n"; // IMF = Input MainSaver Flag
-                                      // mdf = MainSaver Data Flag
-    const string stg_OMF = "\n</mdf>"; // OMF = Output MainSaver Flag
+    const string stg_MIF = "<mdf>\n"; // IMF = Main Input Flag
+                                      // mdf = Main Data Flag
+    const string stg_MOF = "\n</mdf>"; // OMF = Main Output Flag
 
 
     #endregion
@@ -27,7 +27,7 @@ public class JDotSave
     /// <returns>The Class converted to String</returns>
     public string ToDataFile(object Class)
     {
-        return stg_IMF + ClassToString(Class) + stg_OMF;
+        return stg_MIF + ClassToString(Class) + stg_MOF;
     }
 
 
