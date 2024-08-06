@@ -31,9 +31,12 @@ public class JDotSave
         string stg_Result = default;
         if (Class != null && !Class.GetType().IsPrimitive)
         {
-            stg_Result += $"<{Class.GetType().Name}>" +
-            $"{ItemsFromClass(Class, Class.GetType())}" +
-            $"\n</{Class.GetType().Name}>";
+            stg_Result += JDotCons.MergeTagToData($"{Class.GetType().Name}"
+                            , JDotCons.TagHierarchy.Main, true) +
+            //stg_Result += $"<{Class.GetType().Name}>" +
+            $"{ItemsFromClass(Class, Class.GetType())}\n" +
+            JDotCons.MergeTagToData($"{Class.GetType().Name}"
+                            , JDotCons.TagHierarchy.Main);
         }
         return stg_Result;
     }
@@ -67,11 +70,16 @@ public class JDotSave
                 //Revisa si es el ultimo elemento de la lista
                 if (ItemField == Fields[Fields.Length - 1])
                     if (PrimitiveExist)
-                        Result.Append($"\n<<{ItemField.Name}({value}): {FieldValue}>>");
+                        Result.Append(JDotCons
+                            .MergeTagToData($"{ItemField.Name}({value}): {FieldValue}"
+                            , JDotCons.TagHierarchy.Primitive));
+                        //Result.Append($"\n<<{ItemField.Name}({value}): {FieldValue}>>");
                     else
                         Result.Append($"\n\n{ClassToString(FieldValue)}\n");
                 else
-                    Result.Append($"\n<<{ItemField.Name}({value}): {FieldValue}>>");
+                    Result.Append(JDotCons
+                            .MergeTagToData($"{ItemField.Name}({value}): {FieldValue}"
+                            , JDotCons.TagHierarchy.Primitive));
 
             }
 
@@ -86,7 +94,7 @@ public class JDotSave
                 // se compreba si el valor de la lista de elementos es un
                 // IEnumerable de objetos ademas de que los crea un objeto
                 // IEnumerable que contiene los elementos de la lista
-                Result = DataSerializer(Result, FieldValue, GenObjectList, 
+                Result = ListSerializer(Result, FieldValue, GenObjectList, 
                         new string[] { Item, ItemType, ItemField.Name });
             }
         }
@@ -103,7 +111,7 @@ public class JDotSave
     /// <param name="GenObjectList"></param>
     /// <param name="Item_ItemType"></param>
     /// <returns></returns>
-    StringBuilder DataSerializer(StringBuilder Data, object FieldValue,
+    StringBuilder ListSerializer(StringBuilder Data, object FieldValue,
         IList<object> GenObjectList, string[] Item_ItemType)
     {
         //El elemento '0' de Item_ItemType es la variable Item,
@@ -130,24 +138,32 @@ public class JDotSave
                     //Agrega la Flag con el nombre del elemento
                     //de la Lista,y el indice del elemento
                     //entre parentesis
-                    //por ejemplo: \n!<[Word(0)]>
+                    //por ejemplo: \n !<[Word(0)]>
                     if (Item_ItemType[1] == Item_ItemType[0])
-                        Result.Append($"\n\n!<[{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})]>");
+                        Result.Append(JDotCons
+                            .MergeTagToData($"{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})"
+                            , JDotCons.TagHierarchy.ItemComplexList));
                 }
                 else
                 {
                     //Agrega la Flag con el nombre de la Lista,
                     //y el tipo de dato que usa entre parentesis
                     //por ejemplo: \n<List_Words>(string)
-                    Result.Append($"\n<{Item_ItemType[2]}>({Item_ItemType[0]})");
+                    Result.Append(JDotCons
+                            .MergeTagToData($"{Item_ItemType[2]}({Item_ItemType[0]})"
+                            , JDotCons.TagHierarchy.ItemList, true));
+                    //Result.Append($"\n<{Item_ItemType[2]}>({Item_ItemType[0]})");
 
 
                     //Agrega la Flag con el nombre del elemento
                     //de la Lista,y el indice del elemento
                     //entre parentesis
-                    //por ejemplo: \n!<[Word(0)]>
+                    //por ejemplo: \n\n!<[Word(0)]>
                     if (Item_ItemType[1] == Item_ItemType[0])
-                        Result.Append($"\n\n!<[{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})]>");
+                        Result.Append(JDotCons
+                            .MergeTagToData($"{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})"
+                            , JDotCons.TagHierarchy.ItemComplexList, true));
+                    //Result.Append($"\n\n!<[{Item_ItemType[0]}({GenObjectList.IndexOf(ObjectList)})]>");
                 }
 
 
@@ -157,7 +173,8 @@ public class JDotSave
                     //lista compleja de segundo nivel
                     //dentro de su etiqueta.
                     //Por ejemplo: \n![Hello_World]
-                    Result.Append($"\n  ![{ObjectList}]");
+                    Result.Append(JDotCons.MergeTagToData($"{ObjectList})", JDotCons.TagHierarchy.ItemList, true));
+                    //Result.Append($"\n  ![{ObjectList}]");
                 }
 
 
@@ -175,26 +192,34 @@ public class JDotSave
                         //salto de linea y de serlo imprime lo primero
                         //de lo contrario imprime lo segundo
                         if (Result[Result.Length - 1].ToString() == "\n")
-                            Result.Append($"</{Item_ItemType[2]}>\n\n");
+                            Result.Append(JDotCons
+                            .MergeTagToData($"{Item_ItemType[2]}"
+                            , JDotCons.TagHierarchy.List, true));
+                        //Result.Append($"</{Item_ItemType[2]}>\n\n");
                         else
-                            Result.Append($"\n</{Item_ItemType[2]}>\n\n");
+                            Result.Append(JDotCons
+                            .MergeTagToData($"\n{Item_ItemType[2]}"
+                            , JDotCons.TagHierarchy.List, true));
+                        //Result.Append($"\n</{Item_ItemType[2]}>\n\n");
                     }
 
                     //Si no escribira esto por ejemplo: \n</List_Words>\n\n
                     else
                     {
-                        Result.Append($"\n</{Item_ItemType[2]}>");
+                        Result.Append(JDotCons
+                            .MergeTagToData($"\n{Item_ItemType[2]}"
+                            , JDotCons.TagHierarchy.List, true));
                     }
 
 
-                    //la diferencia entre el primer caso y el ultimo
-                    //consiste en que el primer caso permite la
-                    //separacion entre objetos pertenecientes a una
-                    //"Lista Compleja" a diferencia del segundo caso
-                    //por eso el doble salto de linea en el primer caso,
-                    //esto se hace para el cierre de Flags del objeto
-                    //correspondiente
-                }
+                        //la diferencia entre el primer caso y el ultimo
+                        //consiste en que el primer caso permite la
+                        //separacion entre objetos pertenecientes a una
+                        //"Lista Compleja" a diferencia del segundo caso
+                        //por eso el doble salto de linea en el primer caso,
+                        //esto se hace para el cierre de Flags del objeto
+                        //correspondiente
+                    }
             }
         }
         return Result;
